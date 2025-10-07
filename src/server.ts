@@ -6,8 +6,20 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts';
 import Fastify, { FastifyInstance } from 'fastify';
+import db from './configs/db.config.js';
 import { ENV } from './configs/env.config.js';
 import LoginRoute from './routes/login.route.js';
+
+// check database connection
+await db
+  .execute('select 1')
+  .then(() => {
+    console.log('🚀 Database connection established successfully (using postgres-js).');
+  })
+  .catch((err: Error) => {
+    console.error('❌ Failed to connect to the database:', err.message);
+    process.exit(1);
+  });
 
 // Initialize Fastify with JSON Schema type provider and AJV configuration
 const server: FastifyInstance = Fastify({
@@ -33,14 +45,12 @@ async function registerPlugins() {
 
   // CORS
   const origin = `http://${ENV.HOST}:${ENV.PORT}`;
-
   await server.register(fastifyCors, {
     origin: [origin],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-
   console.log(`CORS enabled for: ${origin}`);
 
   // Swagger documentation

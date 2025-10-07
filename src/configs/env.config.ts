@@ -4,11 +4,13 @@ import { z } from 'zod';
 // Load environment variables from .env file immediately upon import.
 dotenv.config();
 
+//! add new env heare
 // Define the schema for environment variables using Zod.
 const envSchema = z.object({
   NODE_ENV: z.enum(['dev', 'prod', 'test']).default('dev'),
   PORT: z.coerce.number().min(1024),
   HOST: z.string().nonempty(),
+  DATABASE_URL: z.string().nonempty(),
 });
 
 // Export the type for TypeScript consumers (what the final ENV object looks like).
