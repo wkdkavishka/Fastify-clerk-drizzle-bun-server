@@ -1,7 +1,7 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { loginRouteSchema } from '../schemas/login.schema.js';
 
-export default async function loginRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+export default async function loginRoutes(fastify: FastifyInstance) {
   fastify.post(
     '/login',
     {
@@ -9,7 +9,8 @@ export default async function loginRoutes(fastify: FastifyInstance, options: Fas
       // preHandler: fastify.clerk.login()
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      return { message: 'List of users' };
+      console.log(request.body);
+      reply.send({ message: 'List of users' });
     }
   );
 }
