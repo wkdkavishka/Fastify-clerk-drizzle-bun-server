@@ -22,8 +22,8 @@ const { devDependencies, scripts, ...prodPackage } = packageJson;
 
 // Add production-specific settings
 prodPackage.scripts = {
-  start: 'node server.mjs',
-  'start:prod': 'node server.mjs',
+  start: 'bun server.mjs',
+  'start:prod': 'bun server.mjs',
 };
 
 // Clean up devDependencies and other unnecessary fields
