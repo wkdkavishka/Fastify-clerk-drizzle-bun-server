@@ -6,6 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "npm run format && NODE_OPTIONS='--loader ts-node/esm' nodemon --ignore 'src/uploads' src/server.ts",
+    "dev:bun": "npm run format && NODE_OPTIONS='--loader ts-node/esm' nodemon --ignore 'src/uploads' src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "build:prod": "npm run build && tsup && node scripts/postbuild.mjs",
@@ -24,7 +25,10 @@
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/sensible": "^6.0.3",
     "@fastify/static": "^8.2.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
     "@fastify/type-provider-json-schema-to-ts": "^5.0.0",
+    "ajv-errors": "^3.0.0",
     "drizzle-orm": "^0.44.5",
     "fastify": "^5.6.1",
     "pg": "^8.16.3",
