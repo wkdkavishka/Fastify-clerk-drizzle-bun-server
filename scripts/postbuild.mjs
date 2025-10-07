@@ -1,54 +1,57 @@
 import dotenv from 'dotenv';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { createRequire } from 'module';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('Running post-build tasks...');
+console.log('Running post-build tasks using Bun natives...');
 
-// Ensure the dist-prod directory exists
+// Paths
 const distProdDir = join(__dirname, '../dist-prod');
-if (!existsSync(distProdDir)) {
-  mkdirSync(distProdDir, { recursive: true });
+const packageJsonPath = join(__dirname, '../package.json');
+const envPath = join(__dirname, '../.env');
+const envDistPath = join(distProdDir, '.env');
+
+// 1️⃣ Ensure dist-prod directory exists
+if (!Bun.file(distProdDir).exists()) {
+  Bun.mkdir(distProdDir, { recursive: true });
 }
 
-// Import package.json
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+// 2️⃣ Read package.json and prepare production version
+const packageJsonText = await Bun.file(packageJsonPath).text();
+const packageJson = JSON.parse(packageJsonText);
+
 const { devDependencies, scripts, ...prodPackage } = packageJson;
 
-// Add production-specific settings
+// Add production-specific scripts
 prodPackage.scripts = {
   start: 'bun server.mjs',
   'start:prod': 'bun server.mjs',
 };
 
-// Clean up devDependencies and other unnecessary fields
+// Remove devDependencies
 delete prodPackage.devDependencies;
 
 // Write production package.json
-writeFileSync(join(distProdDir, 'package.json'), JSON.stringify(prodPackage, null, 2));
+Bun.write(join(distProdDir, 'package.json'), JSON.stringify(prodPackage, null, 2));
 
-// Handle environment variables
-const envPath = join(__dirname, '../.env');
-const envDistPath = join(distProdDir, '.env');
+// 3️⃣ Handle environment variables
+if (Bun.file(envPath).exists()) {
+  // Copy .env to dist-prod
+  const envContent = await Bun.file(envPath).text();
+  await Bun.write(envDistPath, envContent);
 
-// Load environment variables from .env file if it exists
-if (existsSync(envPath)) {
-  // Copy the .env file to dist-prod
-  copyFileSync(envPath, envDistPath);
-
-  // Load the environment variables for the current process
-  const envConfig = dotenv.parse(readFileSync(envPath));
+  // Load env variables for current process
+  const envConfig = dotenv.parse(Bun.file(envPath).text());
   for (const key in envConfig) {
     process.env[key] = envConfig[key];
   }
 }
 
-// Ensure required environment variables are set
-if (!process.env.NODE_ENV) process.env.NODE_ENV = 'prod';
-if (!process.env.PORT) process.env.PORT = '3000';
-if (!process.env.HOST) process.env.HOST = '0.0.0.0';
+// 4️⃣ Set default environment variables if not already set
+process.env.NODE_ENV ||= 'prod';
+process.env.PORT ||= '3000';
+process.env.HOST ||= '0.0.0.0';
+
+console.log('✅ Post-build tasks completed using Bun natives!');
