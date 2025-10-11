@@ -1,6 +1,7 @@
 import type { FastifySchema } from 'fastify';
+import type { FromSchema } from 'json-schema-to-ts';
 
-export const loginSchema = {
+export const loginRequestSchema = {
   type: 'object',
   required: ['email', 'password', 'birthdate'],
   properties: {
@@ -51,23 +52,8 @@ export const loginResponseSchema = {
   required: ['accessToken', 'user'],
 } as const;
 
-// export type LoginBody = {
-//   email: string;
-//   password: string;
-//   birthdate: string;
-// };
-
-// export type LoginResponse = {
-//   accessToken: string;
-//   refreshToken?: string;
-//   user: {
-//     id: string;
-//     email: string;
-//   };
-// };
-
-export const loginRouteSchema: FastifySchema = {
-  body: loginSchema,
+export const loginSchema: FastifySchema = {
+  body: loginRequestSchema,
   response: {
     200: loginResponseSchema,
     400: {
@@ -88,3 +74,7 @@ export const loginRouteSchema: FastifySchema = {
     },
   },
 } as const;
+
+// Export TypeScript types from JSON schemas
+export type LoginRequest = FromSchema<typeof loginRequestSchema>;
+export type LoginResponse = FromSchema<typeof loginResponseSchema>;

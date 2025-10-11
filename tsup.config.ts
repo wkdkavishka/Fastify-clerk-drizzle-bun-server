@@ -16,7 +16,7 @@ export default defineConfig({
   // Use .mjs extension for ESM modules
   outExtension: () => ({ js: '.mjs' }),
   env: {
-    NODE_ENV: 'production',
+    NODE_ENV: 'prod',
   },
   // Keep all node externals bundled except dynamic/optional ones; tsup handles this well for server apps
   external: [],

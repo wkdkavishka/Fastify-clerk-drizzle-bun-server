@@ -16,6 +16,8 @@
     "organize-imports": "bunx organize-imports-cli 'src/**/*.ts'"
   },
   "dependencies": {
+    "@clerk/fastify": "^2.4.37",
+    "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.1.0",
     "@fastify/formbody": "^8.0.2",
     "@fastify/helmet": "^13.0.2",
@@ -29,11 +31,14 @@
     "ajv-errors": "^3.0.0",
     "drizzle-orm": "^0.44.6",
     "fastify": "^5.6.1",
+    "install": "^0.13.0",
+    "pino-pretty": "^13.1.2",
     "postgres": "^3.4.7",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/bun": "^1.2.23",
+    "@clerk/types": "^4.92.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",
     "prettier": "^3.6.2",

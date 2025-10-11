@@ -1,3 +1,5 @@
+import { clerkPlugin } from '@clerk/fastify';
+import cookie from '@fastify/cookie';
 import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
@@ -8,22 +10,15 @@ import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-
 import Fastify, { FastifyInstance } from 'fastify';
 import db from './configs/db.config.js';
 import { ENV } from './configs/env.config.js';
-import LoginRoute from './routes/login.route.js';
+import { clerkMiddleware } from './middlewares/clerk.middleware.js';
+import LoginRoute from './routes/login.routes.js';
 
-// check database connection
-await db
-  .execute('select 1')
-  .then(() => {
-    console.log('🚀 Database connection established successfully (using postgres-js).');
-  })
-  .catch((err: Error) => {
-    console.error('❌ Failed to connect to the database:', err.message);
-    process.exit(1);
-  });
+// Import logger configuration
+import loggerConfig, { logger } from './configs/log.config.js';
 
 // Initialize Fastify with JSON Schema type provider and AJV configuration
 const server: FastifyInstance = Fastify({
-  logger: true,
+  logger: loggerConfig,
   ajv: {
     customOptions: {
       allErrors: true,
@@ -38,6 +33,19 @@ const server: FastifyInstance = Fastify({
   },
 }).withTypeProvider<JsonSchemaToTsProvider>();
 
+// check database connection
+async function checkDatabaseConnection() {
+  await db
+    .execute('select 1')
+    .then(() => {
+      logger.info('🚀 Database connection established successfully (using postgres-js).');
+    })
+    .catch(err => {
+      logger.error('❌ Failed to connect to the database:', err.message);
+      process.exit(1);
+    });
+}
+
 // Register plugins
 async function registerPlugins() {
   // Security headers
@@ -51,7 +59,7 @@ async function registerPlugins() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     // allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  console.log(`CORS enabled for: ${origin}`);
+  server.log.info(`CORS enabled for: ${origin}`);
 
   // Swagger documentation
   await server.register(fastifySwagger, {
@@ -108,7 +116,34 @@ async function registerPlugins() {
   // Sensible defaults for Fastify
   await server.register(fastifySensible);
 
-  // Register routes
+  // Register cookie
+  await server.register(cookie, {
+    // A secret is required to sign/unsign cookies for security
+    secret: ENV.CLERK_COOKIE_SECRET,
+    // You can optionally configure auto-parsing options here
+  });
+
+  // Register Clerk
+  await server.register(clerkPlugin);
+}
+
+// register hooks
+function registerHooks() {
+  //* Clerk middleware for all routes except /docs
+  if (ENV.NODE_ENV === 'dev') {
+    // only for dev environment
+    server.addHook('preHandler', async (request, reply) => {
+      // Skip middleware for /docs route
+      if (request.url.startsWith('/docs')) {
+        return;
+      }
+      return clerkMiddleware(request, reply);
+    });
+  }
+}
+
+// routes
+async function registerRoutes() {
   await server.register(LoginRoute, { prefix: '/login' });
 }
 
@@ -138,13 +173,20 @@ server.get(
 // Start the server
 const start = async () => {
   try {
+    // Check database connection
+    await checkDatabaseConnection();
+    // Register plugins
     await registerPlugins();
+    // Register hooks
+    registerHooks();
+    // Register routes
+    await registerRoutes();
 
     const port: number = ENV.PORT;
     const host: string = ENV.HOST;
 
     await server.listen({ port, host });
-    console.log(`Server is running on http://${host}:${port}`);
+    server.log.info({ url: `http://${host}:${port}` }, 'Server is running');
   } catch (err) {
     server.log.error(err);
     process.exit(1);

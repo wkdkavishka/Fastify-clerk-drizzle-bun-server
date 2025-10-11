@@ -11,6 +11,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().min(1024),
   HOST: z.string().nonempty(),
   DATABASE_URL: z.string().nonempty(),
+  CLERK_SECRET_KEY: z.string().nonempty(),
+  CLERK_PUBLISHABLE_KEY: z.string().nonempty(),
+  CLERK_COOKIE_SECRET: z.string().nonempty(),
 });
 
 // Export the type for TypeScript consumers (what the final ENV object looks like).
