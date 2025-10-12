@@ -8,7 +8,7 @@ export const loginPreHandler = (request: FastifyRequest, reply: FastifyReply): v
 
     // if user is not authenticated
     if (!isAuthenticated) {
-      throw new Error('Unauthorized : from preHandler');
+      throw new Error('Unauthorized : from login preHandler');
     }
 
     // // set cookie
@@ -20,6 +20,6 @@ export const loginPreHandler = (request: FastifyRequest, reply: FastifyReply): v
     // });
   } catch (error) {
     reply.log.error(error);
-    reply.status(401).send({ error: 'Unauthorized : from preHandler : ' + error });
+    reply.status(401).send({ error: `${error} : from login preHandler : ` });
   }
 };

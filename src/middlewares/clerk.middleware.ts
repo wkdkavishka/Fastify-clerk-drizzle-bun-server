@@ -1,5 +1,6 @@
+// import type { AuthUser } from '@/types/fastify.d.js';
 import { getAuth } from '@clerk/fastify';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { AuthUser, FastifyReply, FastifyRequest } from 'fastify';
 
 export const clerkMiddleware = (request: FastifyRequest, reply: FastifyReply): void => {
   try {
@@ -11,11 +12,13 @@ export const clerkMiddleware = (request: FastifyRequest, reply: FastifyReply): v
       throw new Error('Unauthorized : User is not authenticated');
     }
 
-    // Add the auth object to the request with type safety
-    request.auth = {
+    const authUser: AuthUser = {
       isAuthenticated,
       userId,
     };
+
+    // Add the auth object to the request with type safety
+    request.auth = authUser;
   } catch (error) {
     reply.status(401).send({ error });
   }

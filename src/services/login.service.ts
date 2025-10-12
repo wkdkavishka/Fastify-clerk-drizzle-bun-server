@@ -4,7 +4,7 @@ import { LoginResponse } from '@/routes/schemas/login.schema.js';
 
 class LoginService {
   static async login(email: string, password: string, birthdate: string): Promise<LoginResponse> {
-    if (ENV.NODE_ENV === 'dev') {
+    if (ENV.BUN_ENV === 'dev') {
       logger.info({ email, password, birthdate }, 'LoginService.login');
     }
     // mock response // loginResponseSchema

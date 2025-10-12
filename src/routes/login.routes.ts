@@ -1,15 +1,16 @@
 import LoginController from '@/controllers/login.controller.js';
-import { FastifyInstance } from 'fastify';
-import { loginPreHandler } from './preHandlers/login.preHandler.js';
+import { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { loginSchema, type LoginRequest } from './schemas/login.schema.js';
 
-export default async function loginRoutes(fastify: FastifyInstance) {
+export const loginRoutes: FastifyPluginAsync = async (fastify: FastifyInstance) => {
   fastify.post<{ Body: LoginRequest }>(
     '/protected',
     {
-      preHandler: loginPreHandler,
+      // preHandler: loginPreHandler,
       schema: loginSchema,
     },
     LoginController.login
   );
-}
+};
+
+export default loginRoutes;

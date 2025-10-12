@@ -10,11 +10,10 @@ import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-
 import Fastify, { FastifyInstance } from 'fastify';
 import db from './configs/db.config.js';
 import { ENV } from './configs/env.config.js';
-import { clerkMiddleware } from './middlewares/clerk.middleware.js';
-import LoginRoute from './routes/login.routes.js';
-
-// Import logger configuration
 import loggerConfig, { logger } from './configs/log.config.js';
+import { clerkMiddleware } from './middlewares/clerk.middleware.js';
+import loginRoutes from './routes/login.routes.js';
+import { devLoginRoute } from './temp/test-login.js';
 
 // Initialize Fastify with JSON Schema type provider and AJV configuration
 const server: FastifyInstance = Fastify({
@@ -77,8 +76,22 @@ async function registerPlugins() {
       schemes: ['http'],
       consumes: ['application/json'],
       produces: ['application/json'],
+      securityDefinitions: {
+        Bearer: {
+          type: 'apiKey',
+          name: 'Authorization',
+          in: 'header',
+          description: 'Enter JWT Bearer token in the format: Bearer <token>',
+        },
+      },
+      security: [
+        {
+          Bearer: [],
+        },
+      ],
       tags: [
         { name: 'health', description: 'Health check endpoints' },
+        { name: 'auth', description: 'Authentication endpoints' },
         // Add more tags as you add more routes
       ],
     },
@@ -130,11 +143,12 @@ async function registerPlugins() {
 // register hooks
 function registerHooks() {
   //* Clerk middleware for all routes except /docs
-  if (ENV.NODE_ENV === 'dev') {
+  if (ENV.BUN_ENV === 'dev') {
     // only for dev environment
     server.addHook('preHandler', async (request, reply) => {
       // Skip middleware for /docs route
-      if (request.url.startsWith('/docs')) {
+      const routeList = ['/docs', '/dev/dev-login'];
+      if (routeList.includes(request.url)) {
         return;
       }
       return clerkMiddleware(request, reply);
@@ -144,7 +158,9 @@ function registerHooks() {
 
 // routes
 async function registerRoutes() {
-  await server.register(LoginRoute, { prefix: '/login' });
+  //! tood: remove this after testing
+  await server.register(devLoginRoute, { prefix: '/dev' });
+  await server.register(loginRoutes, { prefix: '/login' });
 }
 
 // Health check endpoint

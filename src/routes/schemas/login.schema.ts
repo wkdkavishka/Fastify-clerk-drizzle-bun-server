@@ -49,6 +49,19 @@ export const loginResponseSchema = {
       required: ['id', 'email'],
     },
   },
+  cookies: {
+    type: 'object',
+    properties: {
+      jwt: {
+        type: 'string',
+      },
+      refresh_token: {
+        type: 'string',
+      },
+    },
+    required: ['jwt', 'refresh_token'],
+    additionalProperties: false,
+  },
   required: ['accessToken', 'user'],
 } as const;
 

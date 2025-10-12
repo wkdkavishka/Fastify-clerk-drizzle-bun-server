@@ -8,7 +8,8 @@ class LoginController {
     reply: FastifyReply
   ): Promise<void> {
     // get auth
-    const userId = request.cookies.userId ? request.cookies.userId : 'no-user-id';
+    const auth = request.auth;
+    const userId = auth.userId;
     reply.log.info({ userId }, 'User ID:');
     const response: LoginResponse = await LoginService.login(
       request.body.email,
