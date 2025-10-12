@@ -24,6 +24,10 @@ export const loginRequestSchema = {
         maxLength: 'Password must be less than 100 characters',
       },
     },
+    platform: {
+      // optional for dev login
+      type: 'string',
+    },
   },
   additionalProperties: false,
 } as const;

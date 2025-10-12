@@ -45,3 +45,4 @@ class EnvValidator {
 }
 
 export const ENV: EnvType = EnvValidator.validateAndLoad();
+export const DEV: boolean = ENV.BUN_ENV === 'dev';

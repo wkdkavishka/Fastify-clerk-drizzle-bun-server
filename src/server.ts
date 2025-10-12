@@ -9,7 +9,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts';
 import Fastify, { FastifyInstance } from 'fastify';
 import db from './configs/db.config.js';
-import { ENV } from './configs/env.config.js';
+import { DEV, ENV } from './configs/env.config.js';
 import loggerConfig, { logger } from './configs/log.config.js';
 import { clerkMiddleware } from './middlewares/clerk.middleware.js';
 import loginRoutes from './routes/login.routes.js';
@@ -143,10 +143,10 @@ async function registerPlugins() {
 // register hooks
 function registerHooks() {
   //* Clerk middleware for all routes except /docs
-  if (ENV.BUN_ENV === 'dev') {
+  if (DEV) {
     // only for dev environment
     server.addHook('preHandler', async (request, reply) => {
-      // Skip middleware for /docs route
+      // Skip middleware for routes
       const routeList = ['/docs', '/dev/dev-login', '/dev/refresh'];
       if (routeList.includes(request.url)) {
         return;
@@ -160,6 +160,7 @@ function registerHooks() {
 async function registerRoutes() {
   //! tood: remove this after testing
   await server.register(devLoginRoute, { prefix: '/dev' });
+  //* login routes
   await server.register(loginRoutes, { prefix: '/login' });
 }
 
@@ -197,6 +198,9 @@ const start = async () => {
     registerHooks();
     // Register routes
     await registerRoutes();
+
+    // register clerk client
+    // clerkClient;
 
     const port: number = ENV.PORT;
     const host: string = ENV.HOST;

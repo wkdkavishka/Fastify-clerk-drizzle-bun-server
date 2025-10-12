@@ -1,12 +1,8 @@
 // src/routes/dev-login.ts
-import { ENV } from '@/configs/env.config.js';
-import { createClerkClient } from '@clerk/fastify';
+import clerk from '@/configs/clerk.config.js';
+import { DEV } from '@/configs/env.config.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { DevLoginRequest, DevLoginResponse, devLoginSchema } from './de-login.schemas.js';
-
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY!,
-});
 
 // Route
 export const devLoginRoute: FastifyPluginAsync = async fastify => {
@@ -21,26 +17,26 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
 
       try {
         // Find or create test user
-        const existingUsers = await clerkClient.users.getUserList({ emailAddress: [email] });
+        const existingUsers = await clerk.users.getUserList({ emailAddress: [email] });
         let user = existingUsers.data[0];
         if (!user) {
           fastify.log.info(`Creating test user: ${email}`);
-          user = await clerkClient.users.createUser({
+          user = await clerk.users.createUser({
             emailAddress: [email],
             password: password,
           });
         }
 
         // Create a new session
-        const session = await clerkClient.sessions.createSession({ userId: user.id });
+        const session = await clerk.sessions.createSession({ userId: user.id });
 
         // Get a short-lived session token
-        const token = await clerkClient.sessions.getToken(session.id);
+        const token = await clerk.sessions.getToken(session.id);
 
         // Store the session ID in a cookie (used for refresh)
         reply.setCookie('session_id', session.id, {
           httpOnly: true,
-          secure: ENV.BUN_ENV === 'prod',
+          secure: DEV ? false : true,
           sameSite: 'lax',
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -49,7 +45,7 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
         // Store user Id in a cookie (used for refresh)
         reply.setCookie('user_id', user.id, {
           httpOnly: true,
-          secure: ENV.BUN_ENV === 'prod',
+          secure: DEV ? false : true,
           sameSite: 'lax',
           path: '/',
           maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -58,7 +54,7 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
         // Store the access token (optional)
         reply.setCookie('access_token', token.jwt, {
           httpOnly: true,
-          secure: ENV.BUN_ENV === 'prod',
+          secure: DEV ? false : true,
           sameSite: 'lax',
           path: '/',
           maxAge: 60 * 60, // 1 hour
@@ -93,33 +89,18 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
     if (!userId) {
       return reply.code(401).send({ error: 'No user found' });
     }
-
     try {
       // Get New Token
-      const token = await clerkClient.sessions.getToken(sessionId);
+      const token = await clerk.sessions.getToken(sessionId);
       // Create a new session
       // const session = await clerkClient.sessions.createSession({ userId });
       reply.setCookie('access_token', token.jwt, {
         httpOnly: true,
-        secure: ENV.BUN_ENV === 'prod',
+        secure: DEV ? false : true,
         sameSite: 'lax',
         path: '/',
         maxAge: 60 * 60, // 1 hour
       });
-      // reply.setCookie('session_id', sessionId, {
-      //   httpOnly: true,
-      //   secure: ENV.BUN_ENV === 'prod',
-      //   sameSite: 'lax',
-      //   path: '/',
-      //   maxAge: 60 * 60 * 24 * 7, // 7 days
-      // });
-      // reply.setCookie('user_id', userId, {
-      //   httpOnly: true,
-      //   secure: ENV.BUN_ENV === 'prod',
-      //   sameSite: 'lax',
-      //   path: '/',
-      //   maxAge: 60 * 60 * 24 * 7, // 7 days
-      // });
 
       return reply.send({ access_token: token.jwt });
     } catch (err: any) {

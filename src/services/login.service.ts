@@ -1,11 +1,11 @@
-import { ENV } from '@/configs/env.config.js';
+import { DEV } from '@/configs/env.config.js';
 import { logger } from '@/configs/log.config.js';
 import { LoginResponse } from '@/routes/schemas/login.schema.js';
 import { AuthUser } from 'fastify';
 
 class LoginService {
   static async login(auth: AuthUser, email: string, password: string): Promise<LoginResponse> {
-    if (ENV.BUN_ENV === 'dev') {
+    if (DEV) {
       logger.info({ email, password }, 'LoginService.login');
     }
     // mock response // loginResponseSchema
