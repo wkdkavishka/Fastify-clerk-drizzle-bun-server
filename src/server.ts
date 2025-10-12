@@ -13,7 +13,7 @@ import { ENV } from './configs/env.config.js';
 import loggerConfig, { logger } from './configs/log.config.js';
 import { clerkMiddleware } from './middlewares/clerk.middleware.js';
 import loginRoutes from './routes/login.routes.js';
-import { devLoginRoute } from './temp/test-login.js';
+import { devLoginRoute } from './temp/dev-login.routes.js';
 
 // Initialize Fastify with JSON Schema type provider and AJV configuration
 const server: FastifyInstance = Fastify({
@@ -147,7 +147,7 @@ function registerHooks() {
     // only for dev environment
     server.addHook('preHandler', async (request, reply) => {
       // Skip middleware for /docs route
-      const routeList = ['/docs', '/dev/dev-login'];
+      const routeList = ['/docs', '/dev/dev-login', '/dev/refresh'];
       if (routeList.includes(request.url)) {
         return;
       }

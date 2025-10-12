@@ -1,8 +1,8 @@
 // src/routes/dev-login.ts
 import { ENV } from '@/configs/env.config.js';
 import { createClerkClient } from '@clerk/fastify';
-import type { FastifyPluginAsync, FastifySchema } from 'fastify';
-import type { FromSchema } from 'json-schema-to-ts';
+import type { FastifyPluginAsync } from 'fastify';
+import { DevLoginRequest, DevLoginResponse, devLoginSchema } from './de-login.schemas.js';
 
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
@@ -10,6 +10,7 @@ const clerkClient = createClerkClient({
 
 // Route
 export const devLoginRoute: FastifyPluginAsync = async fastify => {
+  // Dev Login Route
   fastify.post<{ Body: DevLoginRequest }>(
     '/dev-login',
     {
@@ -38,6 +39,15 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
 
         // Store the session ID in a cookie (used for refresh)
         reply.setCookie('session_id', session.id, {
+          httpOnly: true,
+          secure: ENV.BUN_ENV === 'prod',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+
+        // Store user Id in a cookie (used for refresh)
+        reply.setCookie('user_id', user.id, {
           httpOnly: true,
           secure: ENV.BUN_ENV === 'prod',
           sameSite: 'lax',
@@ -76,12 +86,19 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
   // Add refresh route
   fastify.get('/refresh', async (request, reply) => {
     const sessionId = request.cookies.session_id;
+    const userId = request.cookies.user_id;
     if (!sessionId) {
       return reply.code(401).send({ error: 'No session found' });
     }
+    if (!userId) {
+      return reply.code(401).send({ error: 'No user found' });
+    }
 
     try {
+      // Get New Token
       const token = await clerkClient.sessions.getToken(sessionId);
+      // Create a new session
+      // const session = await clerkClient.sessions.createSession({ userId });
       reply.setCookie('access_token', token.jwt, {
         httpOnly: true,
         secure: ENV.BUN_ENV === 'prod',
@@ -89,93 +106,24 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
         path: '/',
         maxAge: 60 * 60, // 1 hour
       });
+      // reply.setCookie('session_id', sessionId, {
+      //   httpOnly: true,
+      //   secure: ENV.BUN_ENV === 'prod',
+      //   sameSite: 'lax',
+      //   path: '/',
+      //   maxAge: 60 * 60 * 24 * 7, // 7 days
+      // });
+      // reply.setCookie('user_id', userId, {
+      //   httpOnly: true,
+      //   secure: ENV.BUN_ENV === 'prod',
+      //   sameSite: 'lax',
+      //   path: '/',
+      //   maxAge: 60 * 60 * 24 * 7, // 7 days
+      // });
+
       return reply.send({ access_token: token.jwt });
     } catch (err: any) {
       return reply.code(401).send({ error: 'Session invalid or expired' });
     }
   });
 };
-
-export const devLoginRequestSchema = {
-  type: 'object',
-  required: ['email', 'password'],
-  properties: {
-    email: {
-      type: 'string',
-      format: 'email',
-      errorMessage: {
-        type: 'Email must be a string',
-        format: 'Please provide a valid email address',
-      },
-    },
-    password: {
-      type: 'string',
-      minLength: 8,
-      errorMessage: {
-        type: 'Password must be a string',
-        minLength: 'Password must be at least 8 characters long',
-      },
-    },
-  },
-  additionalProperties: false,
-} as const;
-
-export const devLoginResponseSchema = {
-  type: 'object',
-  properties: {
-    token: { type: 'string' },
-    user: {
-      type: 'object',
-      properties: {
-        id: { type: 'string' },
-        email: { type: 'string', format: 'email' },
-      },
-      required: ['id', 'email'],
-    },
-  },
-  required: ['token', 'user'],
-  additionalProperties: false,
-} as const;
-
-// Schemas
-export const devLoginSchema: FastifySchema = {
-  body: devLoginRequestSchema,
-  response: {
-    200: {
-      ...devLoginResponseSchema,
-      description: 'Successful login',
-    },
-    400: {
-      type: 'object',
-      properties: {
-        error: { type: 'string' },
-        details: { type: ['string', 'object'] },
-      },
-      additionalProperties: false,
-    },
-    401: {
-      type: 'object',
-      properties: {
-        error: { type: 'string' },
-      },
-      additionalProperties: false,
-    },
-    500: {
-      type: 'object',
-      properties: {
-        error: { type: 'string' },
-      },
-      additionalProperties: false,
-    },
-  },
-  cookies: {
-    type: 'object',
-    properties: {
-      session_id: { type: 'string' },
-      access_token: { type: 'string' },
-    },
-  },
-} as const;
-
-export type DevLoginRequest = FromSchema<typeof devLoginRequestSchema>;
-export type DevLoginResponse = FromSchema<typeof devLoginResponseSchema>;

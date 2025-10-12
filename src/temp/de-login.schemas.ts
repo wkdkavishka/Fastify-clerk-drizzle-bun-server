@@ -1,8 +1,9 @@
+// src/routes/dev-login.ts
 import { commonErrorResponses } from '@/configs/error.config.js';
 import type { FastifySchema } from 'fastify';
 import type { FromSchema } from 'json-schema-to-ts';
 
-export const loginRequestSchema = {
+export const devLoginRequestSchema = {
   type: 'object',
   required: ['email', 'password'],
   properties: {
@@ -17,49 +18,50 @@ export const loginRequestSchema = {
     password: {
       type: 'string',
       minLength: 8,
-      maxLength: 100,
       errorMessage: {
         type: 'Password must be a string',
         minLength: 'Password must be at least 8 characters long',
-        maxLength: 'Password must be less than 100 characters',
       },
     },
   },
   additionalProperties: false,
 } as const;
 
-export const loginResponseSchema = {
+export const devLoginResponseSchema = {
   type: 'object',
   properties: {
-    accessToken: { type: 'string' },
+    token: { type: 'string' },
     user: {
       type: 'object',
       properties: {
         id: { type: 'string' },
+        email: { type: 'string', format: 'email' },
       },
-      required: ['id'],
-    },
-    cookies: {
-      type: 'object',
-      properties: {
-        session_id: { type: 'string' },
-        access_token: { type: 'string' },
-      },
-      required: ['session_id', 'access_token'],
-      additionalProperties: false,
+      required: ['id', 'email'],
     },
   },
-  required: ['accessToken', 'user', 'cookies'],
+  required: ['token', 'user'],
+  additionalProperties: false,
 } as const;
 
-export const loginSchema: FastifySchema = {
-  body: loginRequestSchema,
+export const devLoginSchema: FastifySchema = {
+  body: devLoginRequestSchema,
   response: {
-    200: loginResponseSchema,
+    200: {
+      ...devLoginResponseSchema,
+      description: 'Successful login',
+    },
     ...commonErrorResponses,
   },
+  cookies: {
+    type: 'object',
+    properties: {
+      session_id: { type: 'string' },
+      access_token: { type: 'string' },
+    },
+  },
 } as const;
 
-// Export TypeScript types from JSON schemas
-export type LoginRequest = FromSchema<typeof loginRequestSchema>;
-export type LoginResponse = FromSchema<typeof loginResponseSchema>;
+export type DevLoginRequest = FromSchema<typeof devLoginRequestSchema>;
+export type DevLoginResponse = FromSchema<typeof devLoginResponseSchema>;
+export type DevLoginSchema = FromSchema<typeof devLoginSchema>;
