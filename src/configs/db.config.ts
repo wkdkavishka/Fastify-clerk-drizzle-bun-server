@@ -5,7 +5,7 @@ import { DEV, ENV } from './env.config.js';
 const db = drizzle({
   connection: {
     url: ENV.DATABASE_URL,
-    ssl: DEV ? true : false,
+    ssl: DEV ? false : true,
     max: 10, // max 10 connections in the pool
     idle_timeout: 10000, // release idle connections after 10s
   },
