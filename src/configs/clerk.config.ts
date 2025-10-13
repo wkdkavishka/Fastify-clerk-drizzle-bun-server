@@ -1,4 +1,4 @@
-import { clerkClient } from '@clerk/fastify';
+import { clerkClient } from "@clerk/fastify";
 
 const clerk = clerkClient;
 
