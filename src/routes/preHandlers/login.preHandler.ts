@@ -1,3 +1,4 @@
+import { logError } from '@/configs/log.config.js';
 import { getAuth } from '@clerk/fastify';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
@@ -10,7 +11,8 @@ export const loginPreHandler = (request: FastifyRequest, reply: FastifyReply): v
     if (!isAuthenticated) {
       throw new Error('Unauthorized : from login preHandler');
     }
-  } catch (error) {
+  } catch (error: unknown) {
+    logError('Unauthorized : from login preHandler', error);
     reply.log.error(error);
     reply.status(401).send({ error: `${error} : from login preHandler : ` });
   }

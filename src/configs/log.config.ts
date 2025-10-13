@@ -1,7 +1,7 @@
 import pino, { type Logger } from 'pino';
 
 // Logger configuration
-const loggerConfig = {
+export const loggerConfig = {
   transport: {
     target: 'pino-pretty',
     options: {
@@ -15,4 +15,13 @@ const loggerConfig = {
 // Create a typed logger instance
 export const logger: Logger = pino(loggerConfig);
 
-export default loggerConfig;
+// ## Error Messages For Try Catch ##
+export function logError(message: string, error: unknown): void {
+  if (error instanceof Error) {
+    logger.error(
+      `${message}\n Error.message --> ${error.message}\n Error.cause --> ${error?.cause}`
+    );
+  } else {
+    logger.error(`${message}\n Error (unknown) --> ${error}`);
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "fastify-clerk-drizzle-server",
+  "name": "fastify-clerk-drizzle-bun-server",
   "version": "1.0.0",
   "type": "module",
   "description": "A Fastify server with Clerk Auth and Drizzle ORM, optimized for Bun",

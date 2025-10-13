@@ -1,6 +1,7 @@
 // src/routes/dev-login.ts
 import clerk from '@/configs/clerk.config.js';
 import { DEV } from '@/configs/env.config.js';
+import { logError } from '@/configs/log.config.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { DevLoginRequest, DevLoginResponse, devLoginSchema } from './de-login.schemas.js';
 
@@ -69,11 +70,12 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
         };
 
         return reply.send(toReturn);
-      } catch (err: any) {
-        fastify.log.error(err);
+      } catch (error: unknown) {
+        const message: string = 'Failed to generate token.';
+        logError(message, error);
         return reply.code(400).send({
           error: 'Failed to generate token.',
-          details: err.errors || err.message,
+          details: error instanceof Error ? [error.message, error?.cause] : error,
         });
       }
     }
@@ -103,8 +105,13 @@ export const devLoginRoute: FastifyPluginAsync = async fastify => {
       });
 
       return reply.send({ access_token: token.jwt });
-    } catch (err: any) {
-      return reply.code(401).send({ error: 'Session invalid or expired' });
+    } catch (error: unknown) {
+      const message: string = 'Failed to generate token.';
+      logError(message, error);
+      return reply.code(401).send({
+        error: 'Session invalid or expired',
+        details: error instanceof Error ? [error.message, error?.cause] : 'unknown error',
+      });
     }
   });
 };

@@ -10,7 +10,7 @@ import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-
 import Fastify, { FastifyInstance } from 'fastify';
 import db from './configs/db.config.js';
 import { DEV, ENV } from './configs/env.config.js';
-import loggerConfig, { logger } from './configs/log.config.js';
+import { logError, logger, loggerConfig } from './configs/log.config.js';
 import { clerkMiddleware } from './middlewares/clerk.middleware.js';
 import loginRoutes from './routes/login.routes.js';
 import { devLoginRoute } from './temp/dev-login.routes.js';
@@ -32,17 +32,18 @@ const server: FastifyInstance = Fastify({
   },
 }).withTypeProvider<JsonSchemaToTsProvider>();
 
-// check database connection
+// Initialize database connection
 async function checkDatabaseConnection() {
-  await db
-    .execute('select 1')
-    .then(() => {
-      logger.info('🚀 Database connection established successfully (using postgres-js).');
-    })
-    .catch(err => {
-      logger.error('❌ Failed to connect to the database:', err.message);
-      process.exit(1);
-    });
+  try {
+    // Test the connection
+    await db.execute('select 1');
+    logger.info('🚀 Database connection established successfully (using postgres-js).');
+    return true;
+  } catch (error: unknown) {
+    const message: string = 'Failed to connect to the database:';
+    logError(message, err);
+    process.exit(1);
+  }
 }
 
 // Register plugins
@@ -164,51 +165,39 @@ async function registerRoutes() {
   await server.register(loginRoutes, { prefix: '/login' });
 }
 
-// Health check endpoint
-server.get(
-  '/health',
-  {
-    schema: {
-      tags: ['health'],
-      description: 'Health check endpoint',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            status: { type: 'string' },
-            timestamp: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    },
-  },
-  async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
-  }
-);
-
 // Start the server
 const start = async () => {
   try {
-    // Check database connection
+    // 1. First establish database connection
+    logger.info('🔌 Establishing database connection...');
     await checkDatabaseConnection();
-    // Register plugins
+
+    // 2. Register all plugins
+    logger.info('🔌 Registering plugins...');
     await registerPlugins();
-    // Register hooks
+
+    // 3. Register hooks
+    logger.info('🔌 Registering hooks...');
     registerHooks();
-    // Register routes
+
+    // 4. Register routes
+    logger.info('🔌 Registering routes...');
     await registerRoutes();
 
-    // register clerk client
-    // clerkClient;
+    // todo: remove
+    // const temp = ['test', 'test2'];
+    // throw new Error('Test error', { cause: temp });
 
+    // 5. Start the server only after everything is ready
     const port: number = ENV.PORT;
     const host: string = ENV.HOST;
 
+    logger.info('🚀 Starting server...');
     await server.listen({ port, host });
-    server.log.info({ url: `http://${host}:${port}` }, 'Server is running');
-  } catch (err) {
-    server.log.error(err);
+    logger.info(`✅ Server is running at http://${host}:${port}`);
+  } catch (error: unknown) {
+    const message: string = 'Failed to start server';
+    logError(message, error);
     process.exit(1);
   }
 };
