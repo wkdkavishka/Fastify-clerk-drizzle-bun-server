@@ -119,3 +119,6 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Model Context Protocol
+.mcp_config.json

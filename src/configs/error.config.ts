@@ -1,3 +1,5 @@
+import { logger } from "./log.config.js";
+
 // Base error response type
 export type ErrorResponse = {
 	statusCode: number;
@@ -116,3 +118,14 @@ export const commonErrorResponses: CommonErrorResponses = {
 	429: errorResponses[429],
 	500: errorResponses[500],
 } as const;
+
+// ## Error Messages For Try Catch ##
+export function logError(message: string, error: unknown): void {
+	if (error instanceof Error) {
+		logger.error(
+			`${message}\n Error.message --> ${error.message}\n Error.cause --> ${error?.cause}`,
+		);
+	} else {
+		logger.error(`${message}\n Error (unknown) --> ${error}`);
+	}
+}
