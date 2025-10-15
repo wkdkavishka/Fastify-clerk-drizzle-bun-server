@@ -12,7 +12,8 @@
 		"db:generate": "bunx drizzle-kit generate:pg",
 		"db:push": "bunx drizzle-kit push:pg",
 		"db:studio": "bunx drizzle-kit studio",
-		"format": "bunx biome check --write"
+		"format": "bunx biome check --write",
+		"sync-mcp": "bun scripts/sync-mcp-config.ts"
 	},
 	"dependencies": {
 		"@clerk/fastify": "^2.4.37",
@@ -33,7 +34,8 @@
 		"install": "^0.13.0",
 		"pino-pretty": "^13.1.2",
 		"postgres": "^3.4.7",
-		"zod": "^4.1.12"
+		"zod": "^4.1.12",
+		"dotenv": "^17.2.3"
 	},
 	"devDependencies": {
 		"@clerk/types": "^4.92.0",

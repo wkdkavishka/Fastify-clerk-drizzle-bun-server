@@ -10,10 +10,14 @@ const envSchema = z.object({
 	BUN_ENV: z.enum(["dev", "prod", "test"]).default("dev"),
 	PORT: z.coerce.number().min(1024),
 	HOST: z.string().nonempty(),
-	DATABASE_URL: z.string().nonempty(),
 	CLERK_SECRET_KEY: z.string().nonempty(),
 	CLERK_PUBLISHABLE_KEY: z.string().nonempty(),
 	CLERK_COOKIE_SECRET: z.string().nonempty(),
+	DB_USER: z.string().nonempty(),
+	DB_PASSWORD: z.string().nonempty(),
+	DB_HOST: z.string().nonempty(),
+	DB_PORT: z.string().nonempty(),
+	DB_NAME: z.string().nonempty(),
 });
 
 // Export the type for TypeScript consumers (what the final ENV object looks like).
