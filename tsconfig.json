@@ -12,6 +12,7 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": false,
 		"esModuleInterop": true,
