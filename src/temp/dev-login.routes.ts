@@ -3,7 +3,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import clerk from "@/configs/clerk.config.js";
 import { DEV } from "@/configs/env.config.js";
-import { logError } from "@/configs/log.config.js";
+import { logError } from "@/configs/error.config.js";
 import {
 	type DevLoginRequest,
 	type DevLoginResponse,

@@ -6,13 +6,12 @@ import fastifyRateLimit from "@fastify/rate-limit";
 import fastifySensible from "@fastify/sensible";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
-
 import type { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-
 import Fastify, { type FastifyInstance } from "fastify";
-import db from "./configs/db.config.js";
+import db, { setupVacuumScheduler } from "./configs/db.config.js";
 import { DEV, ENV } from "./configs/env.config.js";
-import { logError, logger, loggerConfig } from "./configs/log.config.js";
+import { logError } from "./configs/error.config.js";
+import { logger, loggerConfig } from "./configs/log.config.js";
 import { clerkMiddleware } from "./middlewares/clerk.middleware.js";
 import loginRoutes from "./routes/login.routes.js";
 import { devLoginRoute } from "./temp/dev-login.routes.js";
@@ -146,7 +145,7 @@ async function registerPlugins() {
 }
 
 // register hooks
-function registerHooks() {
+async function registerHooks() {
 	//* Clerk middleware for all routes except /docs
 	if (DEV) {
 		// only for dev environment
@@ -182,19 +181,30 @@ const start = async () => {
 
 		// 3. Register hooks
 		logger.info("🔌 Registering hooks...");
-		registerHooks();
+		await registerHooks();
 
 		// 4. Register routes
 		logger.info("🔌 Registering routes...");
 		await registerRoutes();
 
-		// 5. Start the server only after everything is ready
+		// 5. Set up cron jobs after server is ready
 		const port: number = ENV.PORT;
 		const host: string = ENV.HOST;
 
+		// Wait for server to be fully ready
+		await server.ready();
+
+		// Set up cron jobs
+		logger.info("⏰ Setting up scheduled jobs...");
+		await setupVacuumScheduler();
+
+		// 6. Start the server
 		logger.info("🚀 Starting server...");
-		await server.listen({ port, host });
-		logger.info(`✅ Server is running at http://${host}:${port}`);
+		const address = await server.listen({ port, host });
+
+		// Log server info after it's fully started
+		logger.info(`✅ Server is running at ${address}`);
+		logger.info(`📚 API Documentation available at ${address}/docs`);
 	} catch (error: unknown) {
 		const message: string = "Failed to start server";
 		logError(message, error);

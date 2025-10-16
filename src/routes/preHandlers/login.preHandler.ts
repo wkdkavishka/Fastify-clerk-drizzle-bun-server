@@ -1,6 +1,6 @@
 import { getAuth } from "@clerk/fastify";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { logError } from "@/configs/log.config.js";
+import { logError } from "@/configs/error.config.js";
 
 export const loginPreHandler = (
 	request: FastifyRequest,

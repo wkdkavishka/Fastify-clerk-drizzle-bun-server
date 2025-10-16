@@ -3,7 +3,7 @@
 import { getAuth } from "@clerk/fastify";
 import type { AuthUser, FastifyReply, FastifyRequest } from "fastify";
 import { DEV } from "@/configs/env.config.js";
-import { logError } from "@/configs/log.config.js";
+import { logError } from "@/configs/error.config.js";
 
 export const clerkMiddleware = (
 	request: FastifyRequest,
